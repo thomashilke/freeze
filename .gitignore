@@ -1,0 +1,7 @@
+*~
+include/*
+build/*
+bin/*
+lib/*
+.DS_Store
+
