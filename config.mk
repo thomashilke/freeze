@@ -17,16 +17,18 @@ BIN_DIR = bin/
 INCLUDE_DIR = include/
 LIB_DIR = lib/
 
+PKG_NAME = freeze
 
-SOURCES = src/freeze.cpp
+SOURCES = src/freeze.cpp src/neumann.cpp
 
-HEADERS = 
+HEADERS = include/freeze/freeze.hpp
 
-BIN = bin/freeze
+BIN = bin/freeze bin/neumann
 
 
 #bin/...: ...
 bin/freeze: build/src/freeze.o
+bin/neumann: build/src/neumann.o
 
 LIB = 
 

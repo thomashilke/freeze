@@ -1,7 +1,8 @@
 *~
 include/*
 build/*
-bin/*
+bin/freeze
+bin/neumann
 lib/*
 .DS_Store
 

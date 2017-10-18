@@ -12,9 +12,10 @@ all: $(BIN) $(LIB) $(HEADERS)
 
 -include $(DEPS)
 
-$(HEADERS): include/lexer/%: src/%
+$(HEADERS): include/$(PKG_NAME)/%: src/%
 	@echo "[INST]" $(<:src/%=%)
-	@install -m 0644 -D $< $@
+	@$(MKDIR) $(MKDIRFLAGS) $(dir $@)
+	@cp $< $(dir $@)
 
 $(OBJECTS): build/%.o: %.cpp
 	@echo "[CXX] " $@
