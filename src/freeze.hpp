@@ -24,7 +24,12 @@ double neumann_exact_solution(const double t, const double* x) {
 enum class bc_type { dirichlet, neumann };
 enum class coordinates_type { spherical, cartesian };
 
-
+/*
+ *  Collect all the relevant parameters from the parameter collection
+ *  at initialization. Separation of the parameter from the freeze
+ *  problem formulation below avoid the necessity to use pointers and
+ *  dynamic allocation for things like mesh, fes, etc.
+ */
 class freeze_parameters {
 public:
   freeze_parameters(const parameter::collection& p) {
@@ -37,20 +42,20 @@ public:
     coordinates_type_enum_map["cartesian"] = coordinates_type::cartesian;
       
     
-    particle_radius         = p.get_value<double>("particle-radius");
+    particle_radius = p.get_value<double>("particle-radius");
 
-    electrolyte_density = p.get_value<double>("electrolyte-density");
-    liquid_electrolyte_diffusivity = p.get_value<double>("liquid-electrolyte-diffusivity-coefficient");
+    electrolyte_density              = p.get_value<double>("electrolyte-density");
+    liquid_electrolyte_diffusivity   = p.get_value<double>("liquid-electrolyte-diffusivity-coefficient");
     liquid_electrolyte_heat_capacity = p.get_value<double>("liquid-electrolyte-heat-capacity");
-    solid_electrolyte_diffusivity = p.get_value<double>("liquid-electrolyte-diffusivity-coefficient");
-    solid_electrolyte_heat_capacity = p.get_value<double>("liquid-electrolyte-heat-capacity");
+    solid_electrolyte_diffusivity    = p.get_value<double>("liquid-electrolyte-diffusivity-coefficient");
+    solid_electrolyte_heat_capacity  = p.get_value<double>("liquid-electrolyte-heat-capacity");
     
-    alumina_density = p.get_value<double>("alumina-density");
-    alumina_heat_capacity = p.get_value<double>("alumina-heat-capacity");
+    alumina_density         = p.get_value<double>("alumina-density");
+    alumina_heat_capacity   = p.get_value<double>("alumina-heat-capacity");
     alumina_diffusivity     = p.get_value<double>("alumina-diffusivity-coefficient");
 
-    electrolyte_sl_low_t = p.get_value<double>("electrolyte-sl-low-t");
-    electrolyte_sl_high_t = p.get_value<double>("electrolyte-sl-high-t");
+    electrolyte_sl_low_t       = p.get_value<double>("electrolyte-sl-low-t");
+    electrolyte_sl_high_t      = p.get_value<double>("electrolyte-sl-high-t");
     electrolyte_sl_latent_heat = p.get_value<double>("electrolyte-sl-latent-heat");
     
     temp_inj                = p.get_value<double>("particle-initial-temperature");
@@ -75,6 +80,12 @@ public:
     output_beta_function = p.get_value<bool>("output-beta-function");
     output_neumann_exact_solution = p.get_value<bool>("output-neumann-exact-solution");
   }
+
+  /*
+   *  All the parameter are declared public. It's the responsibility
+   *  of the user to declare the freeze_parameter instance const if
+   *  the parameter are not supposed to be updated.
+   */
 
   // physical parameters
   double electrolyte_density;
@@ -121,6 +132,13 @@ public:
   bool output_neumann_exact_solution;
 };
 
+
+/*
+ *  Stefan problem formulation class 
+ *  This class encapsulate the internals of the numerical algorithm to
+ *  compute the solution of the Stefan problem specified by the
+ *  parameter set.
+ */
 class freeze {
 public:
   using cell_type = cell::edge;
@@ -144,6 +162,10 @@ public:
       dm(mesh.get_boundary_submesh()),
       fes(mesh, empty_boundary) {}
 
+
+  /*
+   *  Compute the solution of the specified problem
+   */
   element_type run() {
     if (p.output_beta_function)
       show_beta_function();
@@ -152,6 +174,11 @@ public:
     return stefan();
   }
 
+  
+  /*
+   *  Display the specified beta function
+   *  The result is stored in the file p.output_prefix + "-beta.dat"
+   */
   void show_beta_function() {
     const double u_l(p.electrolyte_sl_low_t * p.solid_electrolyte_diffusivity
                      / (p.solid_electrolyte_heat_capacity * p.electrolyte_density));
@@ -171,18 +198,27 @@ public:
     const std::size_t n(500); 
 
     std::ofstream beta_file(p.output_prefix + "-beta.dat", std::ios::out);
+    if (not beta_file)
+      throw std::string("failed to open ") + p.output_prefix + "-beta.dat" + " for output.";
+    
     for (std::size_t i(0); i < n; ++i) {
       const double u(u_min + (static_cast<double>(i) / static_cast<double>(n - 1) * (u_max - u_min)));
       beta_file << u << " " << beta(u) << std::endl;
     }
   }
 
+  /*
+   *  Display the Neumann exact solution
+   *  The result is stored in the file p.output_prefix + "-neumann-exact-solution.dat"
+   */
   void show_neumann_exact_solution() {
     const std::size_t n(500);
 
     std::ofstream neumann_es_file(p.output_prefix + "-neumann-exact-solution.dat", std::ios::out);
+    if (not neumann_es_file)
+      throw std::string("failed to open ") + p.output_prefix + "-neumann-exact-solution.dat" + " for output.";
+    
     const double t(p.time_end);
-
     for (std::size_t i(0); i < n; ++i) {
       const double x((static_cast<double>(i) / static_cast<double>(n - 1) * p.domain_size));
       neumann_es_file << x << " " << neumann_exact_solution(t, &x) << std::endl;
@@ -267,11 +303,12 @@ private:
     
     return std::max({solid_slope, mushy_slope, liquid_slope});
   }
-  
-  static double spherical_element(const double* x) {
-    return (*x) * (*x);
-  }
 
+  
+  /*
+   * Apply Dirichlet boundary conditions on the specified Dirichlet
+   * boundary
+   */
   void setup_boundary_conditions(fes_type& fes) {
     const mesh_type& mesh(fes.get_mesh());
     submesh<cell_type> dm(mesh.get_boundary_submesh());
@@ -291,6 +328,9 @@ private:
     }
   }
 
+  /*
+   *  Extract the position(s) of the state transition
+   */
   std::set<double> build_level_set(const mesh_data<double, fe_mesh<cell_type> >& data, double level) {
     std::set<double> level_crossings;
 
@@ -327,7 +367,24 @@ private:
     return level_crossings;
   }
 
-  
+
+  /*
+   *  Compute the transient numerical solution of the specified stefan
+   *  problem.
+   * 
+   *  We perform in that order:
+   *  - Handle the dirichlet boundary conditions, if any,
+   *  - Setup the initial temperature and initial enthalpy,
+   *  - Build the bilinear form (heat equation), using a Gauss 3
+   *    points integration formula and p1-p1 edge elements,
+   *  - Time iteration:
+   *    - Export transient solution
+   *    - Assemble the RHS,
+   *    - Assemble the Neumann boundary conditions, if any,
+   *    - Get u^{n+1} by evaluating the Chernoff formula,
+   *  - Output the final solution and the transition over time,
+   *  - Return the temperature at t = T.
+   */
   element_type stefan() {
     using namespace std::placeholders;
 
@@ -364,7 +421,7 @@ private:
     bilinear_form<fes_type, fes_type> a(fes, fes); {
       auto theta(a.get_trial_function());
       auto v(a.get_test_function());
-      
+
       a += integrate<quad::edge::gauss3>(make_expr(volume_element) * theta * v
                                          + (delta_t / mu) * make_expr(volume_element) * d<1>(theta) * d<1>(v)
                                          , mesh);
@@ -436,6 +493,9 @@ private:
     if (p.output_transition) {
       std::ofstream transition_file(p.output_prefix + "-transitions.dat",
                                     std::ios::out);
+      if (not transition_file)
+        throw std::string("failed to open ") + p.output_prefix + "-transitions.dat" + " for output.";
+      
       for (const auto& t: transitions)
         transition_file << t.first << " " << t.second << std::endl;
     }
