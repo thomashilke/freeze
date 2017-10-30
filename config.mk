@@ -1,11 +1,12 @@
 
 include site-config.mk 
 
+export OMPI_CXX = clang++
 CXX = mpicxx
 DEPS_BIN = g++
 DEPSFLAGS = -std=c++11 -I$(SITE_INCLUDE_DIR) -I$(SITE_LAPACK_INCLUDE_DIR) -I$(SITE_PETSC_INCLUDE_DIR) $(shell mpicxx --showme:compile)
-CXXFLAGS += -O3 -flto -std=c++11 -Wextra -Wall -Wno-unused-parameter -I$(SITE_INCLUDE_DIR) -I$(SITE_LAPACK_INCLUDE_DIR) -I$(SITE_PETSC_INCLUDE_DIR)
-LDFLAGS += -O3 -flto -L$(SITE_LIB_DIR) -L$(SITE_LAPACK_LIB_DIR) -L$(SITE_PETSC_LIB_DIR)
+CXXFLAGS += -O2 -std=c++11 -Wextra -Wall -Wno-unused-parameter -I$(SITE_INCLUDE_DIR) -I$(SITE_LAPACK_INCLUDE_DIR) -I$(SITE_PETSC_INCLUDE_DIR)
+LDFLAGS += -O2 -L$(SITE_LIB_DIR) -L$(SITE_LAPACK_LIB_DIR) -L$(SITE_PETSC_LIB_DIR)
 LDLIB += -llapacke -lpetsc -lmpi -ltfel -lparameter -llexer
 AR = ar
 ARFLAGS = rc

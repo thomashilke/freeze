@@ -46,10 +46,31 @@ clean:
 	@rm -rf include/*
 	@rm -f $(LIB)
 
-install: $(BIN) $(HEADERS) $(LIB)
-	cp $(BIN) $(PREFIX)/$(BIN_DIR)/
-	cp -r include/* $(PREFIX)/$(INCLUDE_DIR)/
-	cp $(LIB) $(PREFIX)/$(LIB_DIR)/
+install: install-dev
+install-dev: install-lib install-header
+install-all: install-lib install-header install-bin
+
+install-header: $(HEADERS)
+	@echo "[CP]  " $(HEADERS)
+ifneq ($(HEADERS),)
+	@$(MKDIR) $(MKDIRFLAGS) $(PREFIX)/$(INCLUDE_DIR)/
+	@cp -r include/* $(PREFIX)/$(INCLUDE_DIR)/
+endif
+
+install-lib: $(LIB)
+	@echo "[CP]  " $(LIB)
+ifneq ($(LIB),)
+	@$(MKDIR) $(MKDIRFLAGS) $(PREFIX)/$(LIB_DIR)/
+	@cp $(LIB) $(PREFIX)/$(LIB_DIR)/
+endif
+
+
+install-bin: $(BIN)
+	@echo "[CP]  " $(BIN)
+ifneq ($(BIN),)
+	@$(MKDIR) $(MKDIRFLAGS) $(PREFIX)/$(BIN_DIR)/
+	@cp $(BIN) $(PREFIX)/$(BIN_DIR)/
+endif
 
 print-%:
 	@echo $*=$($*)
