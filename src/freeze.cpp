@@ -11,7 +11,7 @@ int main(int argc, char *argv[]) {
       p.read_from_file(argv[1]);
 
       for (std::size_t i(0); i < p.get_collection_size(); ++i) {
-        std::cout << "running parameter set collection #" << i + 1 << " of " << p.get_collection_size() << std::endl;        
+        std::cout << "running parameter set collection #" << i + 1 << " of " << p.get_collection_size() << std::endl;
         p.set_current_collection(i);
         
         freeze f(p);
