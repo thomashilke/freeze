@@ -1,0 +1,273 @@
+\section{Introduction}
+Le package \texttt{freeze} impl\'emente une m\'ethode num\'erique de
+type \'el\'ements finis et une formule de Chernoff pour approximer la
+solution d'un probl\`eme de Stefan en une dimension d'espace.
+
+\section{Formulation math\'ematique du probl\`eme}
+Soit $\rho$ la densit\'e suppos\'ee constante d'un mat\'eriau qui
+subit une transition entre le phases solide et liquide \`a la
+temp\'erature $\Theta_t$. La chaleur sp\'ecifique du mat\'eriau dans
+les phases solide et liquide est not\'ee respectivement $C_{p,1}$ et
+$C_{p,2}$. Soit $\lambda$ la chaleur latente de transition de phase,
+et $\eta$ la fraction solide en fonction de la temp\'erature $\Theta$:
+\begin{equation*}
+  \eta(\Theta) = \left\{
+  \begin{array}{ll}
+    1,&\quad \Theta < \Theta_t,\\
+    0,&\quad \Theta \geq \Theta_t.
+  \end{array}
+  \right.
+\end{equation*}
+On notera dor\'enavant la chaleur sp\'ecifique en fonction de la
+temp\'erature:
+\begin{equation*}
+  C_p(\Theta) = \left\{
+  \begin{array}{ll}
+    C_{p,1},&\quad \Theta < \Theta_t,\\
+    C_{p,2},&\quad \Theta \geq \Theta_t.
+  \end{array}
+  \right.
+\end{equation*}
+De m\^eme, on note $\kappa_1$ et $\kappa_2$ les coefficients de
+conduction thermique des phases solide et liquite, et on note $\kappa$
+le coefficient de conduction en fonction de la temp\'erature:
+\begin{equation*}
+  \kappa(\Theta) = \left\{
+  \begin{array}{ll}
+    \kappa_1,&\quad \Theta < \Theta_t,\\
+    \kappa_2,&\quad \Theta \geq \Theta_t.
+  \end{array}
+  \right.
+\end{equation*}
+
+
+On introduit l'enthalpie par unit\'e de volume du mat\'eriau $h$ en
+fonction de la temp\'erature $\Theta$:
+\begin{equation}
+  H(\Theta) = \int_0^\Theta \rho C_p(s)\,\mathrm ds + \rho \lambda \parent{1 - \eta(\Theta)}.
+\end{equation}
+
+Soit $\beta:\mathbb R\to\mathbb R$ la fonction d\'efinie par
+\begin{equation*}
+  \beta(h) = \left\{
+  \begin{array}{ll}
+    \displaystyle\frac{h}{\rho C_{p,1}},& \quad \forall\ h < \Theta_t \rho C_{p,1},\\
+    \Theta_f,& \quad \forall\ \Theta_t \rho C_{p,1} \leq h \leq \Theta_t \rho C_{p,1} + \rho\lambda,\\
+    \Theta_f + \displaystyle\frac{h - \parent{\Theta_t \rho C_{p,1} + \rho\lambda}}{\rho
+      C_{p,2}},& \quad \forall\ \Theta_t \rho C_{p,1} + \rho\lambda < h.
+  \end{array}
+  \right.
+\end{equation*}
+
+On note que la fonction $\beta$ est l'inverse de la fonction $h$ au
+sens que:
+\begin{equation*}
+  \beta(H(\Theta)) = \Theta,\quad \forall \Theta.
+\end{equation*}
+
+On note $\partial \Omega = \Gamma_D \cup \Gamma_N$, tel que
+$\Gamma_D\cap \Gamma_N = \emptyset$, o\`u $\Gamma_N$ et $\Gamma_D$
+sont donn\'es. On suppose que le mat\'eriau occupe le domaine ouvert
+$\Omega = (0, \infty)$. On note $u(t, x)$ l'enthalpie du mat\'eriau au
+point $x\in\Omega$ et \`a l'instant $t > 0$. Le probl\`eme de Stefan
+consiste \`a chercher une fonction $u:[0, \infty)\times\Omega$
+solution de l'\'equation:
+\begin{equation}\label{eq:stefan}
+  \begin{array}{ll}
+    \displaystyle\frac{\partial u}{\partial t} - \displaystyle\frac{\partial }{\partial x}\parent{\kappa \displaystyle\frac{\partial}{\partial x} \beta(u)} = 0,& x\in\Omega,\ t > 0,\\[\normalbaselineskip]
+    u(0, x) = u_0(x),& x\in \Omega,\\[\normalbaselineskip]
+    \beta(h) = g_D(t, x),& x \in\Gamma_D, t > 0\\[\normalbaselineskip]
+    \displaystyle\frac{\partial \beta(h)}{\partial n}(t, x) = g_N(t, x),& x \in\Gamma_N, t > 0.
+  \end{array}
+\end{equation}
+Le probl\`eme (\ref{eq:stefan}) \'etant singulier, il est \`a comprendre
+au sens faible. Le probl\`eme faible correspondant \`a l'\'equation
+(\ref{eq:stefan}) est le suivant. On cherche une fonction $u:[0,
+  \infty)\times\Omega\to\mathbb R$ telle que:
+\begin{equation}\label{eq:stefan-weak}
+  \int_\Omega \frac{\partial u}{\partial t} v\,\mathrm dx +
+  \int_\Omega \nabla \beta(u) \cdot \nabla v\,\mathrm dx = \int_{\Gamma_D} g_N v\, \mathrm d\sigma
+\end{equation}
+et
+\begin{align*}
+  u(0, x) &= u_0(x), \quad \forall x \in \Omega,\\
+  u(t, x) &= g_D(t, x), \quad \forall x \in \Gamma_D,
+\end{align*}
+pour toute fonction $v:\Omega\to\mathbb R$ telle que
+\begin{equation*}
+  v(t, x) = 0, \quad \forall x \in \Gamma_D
+\end{equation*}
+suffisamment lisse.
+
+Dans le cas o\`u on s'int\'eresse au probl\`eme 3D avec une
+symm\'etrie sph\'erique, on utilise la formulation faible suivante:
+\begin{equation}\label{eq:stefan-weak-spherical}
+  \int_\Omega \frac{\partial u}{\partial t} vr^2\,\mathrm dr +
+  \int_\Omega \partial_r \beta(u) \cdot \partial_r vr^2\,\mathrm dr =
+  \int_{\Gamma_D} g_N vr^2 \, \mathrm d\sigma
+\end{equation}
+o\`u $u$ et $g_N$ sont fonction du rayon $r$ et du temps $t$, et $v$
+est fonction de $r$.
+
+\section{Discr\'etisation}\label{sec:discretisation}
+On discr\'etise le probl\`eme (\ref{eq:stefan}) en temps et en espace
+en suivant le travail de \cite{Paolini1988}. Soit $\tau > 0$ le pas de
+temps, $t^k = k\tau$, $k = 0,1,2,\dots$ la discr\'etisation en temps
+et $\mu$ une constante telle que:
+\begin{equation}
+0 < \mu \leq \frac{1}{\sup \beta'(h)}.
+\end{equation}
+Soit $k \in \mathbb N$, et on note $\Theta^k$ l'approximation de
+$\Theta(t^k, .)$, et de m\^eme pour $u^k$
+l'approximation de $u(t^k, .)$. On pose $\Theta^0(x) =
+\Theta_0(x)$ et $u^0 = H(\Theta^0)$.  A chaque pas de temps,
+l'\'equation (\ref{eq:stefan}) est lin\'earis\'ee de la mani\`ere
+suivante.
+\begin{align}
+  \Theta^{k+1} - \frac{\tau}{\mu}\nabla\parent{\kappa\nabla\Theta^{k+1}} = \beta(u^k),\label{eq:lin-stefan}\\
+  u^{k+1} = u^{k} + \mu\parent{\Theta^{k+1}-\beta(u^{k})}\label{eq:lin-chernoff}
+\end{align}
+avec les conditions de bord:
+\begin{align}
+  \Theta^{k+1}(x) = g_D(t^{k+1}, x),\quad& x \in\Gamma_D\\
+  \displaystyle\frac{\partial \Theta^{k+1}}{\partial n}(t, x) = g_N(t^{k+1}, x),&\quad x \in\Gamma_N.
+\end{align}
+
+L'\'equation (\ref{eq:lin-stefan}) est discr\'etis\'ee par une
+m\'ethode \'elements finis $\mathbb P_1$-$\mathbb P_1$ sur un maillage
+uniforme d'un sous-ensemble born\'e $\Omega' \subset
+\Omega$. Typiquement, $\Omega' = [0, L]$ avec $L > 0$.  L'\'equation
+(\ref{eq:lin-chernoff}) est une simple \'equation alg\'ebrique, et la
+somme est effectu\'ee degr\'e de libert\'e par degr\'e de libert\'e,
+de m\^eme que l'\'evaluation de $\beta(u^k)$.
+
+
+\section{Le package \texttt{freeze}}
+Le code distribu\'e dans le package \texttt{freeze} impl\'emente le
+sch\'ema num\'erique d\'ecrit \`a la section
+\ref{sec:discretisation}. Cette section contient des informations
+quant \`a l'installation du package, des d\'ependances requises, de
+l'\'execution du mod\`ele et de l'acc\`es aux r\'esultats.
+
+\subsection{Installation}
+La compilation du code n\'ecessite les d\'ependance suivantes:
+\begin{itemize}
+  \item \texttt{petsc} version 3.7.6. Les versions ult\'erieures sont
+    probablement support\'ees, mais sans garanties. Les version 3.6.3
+    et ant\'erieures ne sont \textbf{pas} support\'ees.
+  \item \texttt{liblapacke-dev} version 3.5.0. Cette version
+    correspond probablement aux packages distribu\'es par les
+    distributions de linux principales (Ubuntu, debian, ...)
+  \item \texttt{clang++} version 3.8.0. D'autres compilateurs sont
+    probablement support\'es, pour autant qu'ils impl\'ementent le
+    standard \texttt{C++14}. En revanche, en raison d'un bug dans
+    \texttt{g++}, celui-ci n'est pas support\'e.
+\end{itemize}
+
+Pour compiler le package, il suffit de se placer dans le dossier
+\texttt{freeze} et de lancer \texttt{make}:
+\begin{lstlisting}[language={},frame=single,basicstyle=\ttfamily\footnotesize]
+  [user@localhost ~/dev/freeze> make
+\end{lstlisting}
+Une fois la compilation termin\'ee, les ex\'ecutables se trouvent dans
+le sous-dossier \texttt{freeze/bin/}. Il y en a deux:
+\begin{itemize}
+\item \texttt{freeze}: calcule la solution transitoire d'un probl\`eme
+  de Stefan, selon les param\`etres sp\'ecifi\'es dans le fichier
+  pass\'e en ligne de commande,
+\item \texttt{neumann}: calcule la solution au temps final d'un probl\`eme
+  de Stefan, selon les param\`etres sp\'ecifi\'es dans le fichier
+  pass\'e en ligne de commande, puis calcul l'erreur $L_2$ entre le
+  r\'esultat obtenu et la solution exacte de Neumann du probl\`eme
+  adimentionn\'e.
+\end{itemize}
+On d\'ecrit l'usage de ces deux ex\'ecutables dans les parties qui suivent.
+
+\subsection{Execution des mod\`eles: \texttt{freeze}}
+L'ex\'ecutable \texttt{freeze} calcule la solution transitoire d'un
+probl\`eme de Stefan. La sp\'ecification pr\'ecise se fait par
+l'interm\'ediaire de fichier de configuration qui sont pass\'e en
+param\`etres sur la ligne de commande.
+
+Des exemples de fichier de configuration peuvent \^etre trouv\'es dans
+le sous-dossier \texttt{freeze/bin}. Par exemple, la commande suivante:
+\begin{lstlisting}[language={},frame=single,basicstyle=\ttfamily\footnotesize]
+  [user@localhost ~/dev/freeze/bin> ./freeze cryolite-particle-remelt.conf
+\end{lstlisting}
+calcule la solution transitoire d'une situation qui correspond \`a la
+formation initiale d'une couche de bain gel\'e \`a la surface d'une
+particule, et qui finit par refondre.
+
+L'execution de cette commande produit (potentiellement, en fonction
+des param\`etres sp\'ecifi\'es dans
+\texttt{cryolite-particle-remelt.conf}) en output une s\'erie de
+fichiers \texttt{ASCII} dans le sous-dossier
+\texttt{freeze/bin/output/}:
+\begin{itemize}
+\item \texttt{cryolite-particle-remelt-beta.dat}: le graph de la
+  fonction $\beta$ autour de la transition de phase,
+\item \texttt{cryolite-particle-remelt-neumann-exact-solution.dat}: le
+  graph de la solution exact de Neumann \'evalu\'ee au temps final,
+\item \texttt{cryolite-particle-remelt-ts-[0-9]+.dat}: la solution num\'erique
+  transitoire \`a chaque pas de temps,
+\item \texttt{cryolite-particle-remelt.dat}: la solution num\'erique
+  au temps final,
+\item \texttt{cryolite-particle-remelt-transitions.dat}: la position
+  de la transition de phase en fonction du temps.
+\end{itemize}
+Les donn\'ees de ces fichiers peuvent \^etre visualis\'e par
+\texttt{GNUPlot}, \texttt{MatLAB}, \texttt{GNU Octave} ou \'equivalent
+sans post-processing n\'ecessaire.
+
+
+L'output sur la sortie standard est minimal, et indique uniquement
+l'instance de la collection de param\`etre sp\'ecifi\'ee dans le
+fichier de param\`etre qui est en cours de calcul. Pour l'exemple
+ci-dessus, on obtient:
+\begin{lstlisting}[language={},frame=single,basicstyle=\ttfamily\footnotesize]
+  [user@localhost ~/dev/freeze/bin> ./freeze cryolite-particle-remelt.conf
+  running parameter set collection #1 of 1
+  [user@localhost ~/dev/freeze/bin>
+\end{lstlisting}
+puisque la collection de param\`etre est un singleton dans ce cas-ci.
+
+Un exemple de collection non triviale peut \^etre trouv\'e dans le
+fichier de param\`etre
+\texttt{cryolite-particle-remelt-study.conf}. Le lecteur int\'eress\'e
+par la syntaxe et la s\'emantique de ces fichiers de param\`etres se
+r\'ef\'erera \`a la documentation du package \texttt{parameter}.
+
+\subsection{Execution des mod\`eles: \texttt{neumann}}
+L'executable \texttt{neumann} effectue les m\^emes op\'erations que
+l'executable \texttt{freeze}, mais calcule en plus l'erreur $L_2$
+entre la solution num\'erique au temps final et la solution exacte de
+Neumann. Les param\`etres sp\'ecifi\'es dans les fichier de
+configuration doivent donc correspondre \`a la solution de Neumann
+pour que l'erreur calcul\'ee ait un sens. Le lecteur int\'eress\'e une
+discussion d\'etaill\'ee de cette solution dans \cite{Hill1987}.
+
+Le fichier de param\`etre \texttt{stephan-exact-neumann-solution.conf}
+correspond \`a cette configuration. L'output de l'ex\'ecutable
+\texttt{neumann} est le m\^eme que celui de \texttt{freeze} en terme de
+fichiers \texttt{ASCII}, mais affiche en plus l'erreur $L_2$ sur la
+sortie standard \`a l'issue du calcul.
+
+Le fichier \texttt{stephan-exact-neumann-solution.conf} sp\'ecifie une
+collection de param\`etres qui correspondent \`a une \'etude de
+convergence de l'erreur $L_2$. Par exemple, on obtient:
+\begin{lstlisting}[language={},frame=single,basicstyle=\ttfamily\footnotesize]
+  [user@localhost ~/dev/freeze/bin> ./neumann stephan-exact-neumann-solution.conf
+  running parameter set collection #1 of 6
+  L2_error(t = 0.5) = 0.00995969
+  running parameter set collection #2 of 6
+  L2_error(t = 0.5) = 0.00565716
+  running parameter set collection #3 of 6
+  L2_error(t = 0.5) = 0.00343643
+  running parameter set collection #4 of 6
+  L2_error(t = 0.5) = 0.00201683
+  running parameter set collection #5 of 6
+  L2_error(t = 0.5) = 0.00121125
+  running parameter set collection #6 of 6
+  L2_error(t = 0.5) = 0.000713004    
+  [user@localhost ~/dev/freeze/bin>
+\end{lstlisting}
