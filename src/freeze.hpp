@@ -45,14 +45,14 @@ public:
     particle_radius = p.get_value<double>("particle-radius");
 
     electrolyte_density              = p.get_value<double>("electrolyte-density");
-    liquid_electrolyte_diffusivity   = p.get_value<double>("liquid-electrolyte-diffusivity-coefficient");
+    liquid_electrolyte_conductivity   = p.get_value<double>("liquid-electrolyte-conductivity-coefficient");
     liquid_electrolyte_heat_capacity = p.get_value<double>("liquid-electrolyte-heat-capacity");
-    solid_electrolyte_diffusivity    = p.get_value<double>("liquid-electrolyte-diffusivity-coefficient");
+    solid_electrolyte_conductivity    = p.get_value<double>("liquid-electrolyte-conductivity-coefficient");
     solid_electrolyte_heat_capacity  = p.get_value<double>("liquid-electrolyte-heat-capacity");
     
     alumina_density         = p.get_value<double>("alumina-density");
     alumina_heat_capacity   = p.get_value<double>("alumina-heat-capacity");
-    alumina_diffusivity     = p.get_value<double>("alumina-diffusivity-coefficient");
+    alumina_conductivity     = p.get_value<double>("alumina-conductivity-coefficient");
 
     electrolyte_sl_low_t       = p.get_value<double>("electrolyte-sl-low-t");
     electrolyte_sl_high_t      = p.get_value<double>("electrolyte-sl-high-t");
@@ -89,9 +89,9 @@ public:
 
   // physical parameters
   double electrolyte_density;
-  double liquid_electrolyte_diffusivity;
+  double liquid_electrolyte_conductivity;
   double liquid_electrolyte_heat_capacity;
-  double solid_electrolyte_diffusivity;
+  double solid_electrolyte_conductivity;
   double solid_electrolyte_heat_capacity;
 
   double electrolyte_sl_low_t;
@@ -100,7 +100,7 @@ public:
   
   double alumina_density;
   double alumina_heat_capacity;
-  double alumina_diffusivity;
+  double alumina_conductivity;
 
   // model parameters
   double particle_radius;
@@ -180,7 +180,7 @@ public:
    *  The result is stored in the file p.output_prefix + "-beta.dat"
    */
   void show_beta_function() {
-    const double u_l(p.electrolyte_sl_low_t * p.solid_electrolyte_diffusivity
+    const double u_l(p.electrolyte_sl_low_t * p.solid_electrolyte_conductivity
                      / (p.solid_electrolyte_heat_capacity * p.electrolyte_density));
     const double u_h(u_l + p.electrolyte_sl_latent_heat * p.electrolyte_density);
 
@@ -243,14 +243,14 @@ private:
   }
 
   double beta(double u) const {
-    const double u_l(p.electrolyte_sl_low_t * p.solid_electrolyte_diffusivity
+    const double u_l(p.electrolyte_sl_low_t * p.solid_electrolyte_conductivity
                      / (p.solid_electrolyte_heat_capacity * p.electrolyte_density));
     const double u_h(u_l + p.electrolyte_sl_latent_heat * p.electrolyte_density);
 
-    const double liquid_slope(p.liquid_electrolyte_diffusivity
+    const double liquid_slope(p.liquid_electrolyte_conductivity
                               / (p.liquid_electrolyte_heat_capacity
                                  * p.electrolyte_density));
-    const double solid_slope(p.solid_electrolyte_diffusivity
+    const double solid_slope(p.solid_electrolyte_conductivity
                               / (p.solid_electrolyte_heat_capacity
                                  * p.electrolyte_density));
 
@@ -266,14 +266,14 @@ private:
   }
 
   double inverse_beta(double temp) const {
-    const double u_l(p.electrolyte_sl_low_t * p.solid_electrolyte_diffusivity
+    const double u_l(p.electrolyte_sl_low_t * p.solid_electrolyte_conductivity
                      / (p.solid_electrolyte_heat_capacity * p.electrolyte_density));
     const double u_h(u_l + p.electrolyte_sl_latent_heat * p.electrolyte_density);
 
-    const double liquid_slope(p.liquid_electrolyte_diffusivity
+    const double liquid_slope(p.liquid_electrolyte_conductivity
                               / (p.liquid_electrolyte_heat_capacity
                                  * p.electrolyte_density));
-    const double solid_slope(p.solid_electrolyte_diffusivity
+    const double solid_slope(p.solid_electrolyte_conductivity
                               / (p.solid_electrolyte_heat_capacity
                                  * p.electrolyte_density));
 
@@ -291,10 +291,10 @@ private:
   }
 
   double beta_lipschitz_constant() const {
-    const double liquid_slope(p.liquid_electrolyte_diffusivity
+    const double liquid_slope(p.liquid_electrolyte_conductivity
                               / (p.liquid_electrolyte_heat_capacity
                                  * p.electrolyte_density));
-    const double solid_slope(p.solid_electrolyte_diffusivity
+    const double solid_slope(p.solid_electrolyte_conductivity
                               / (p.solid_electrolyte_heat_capacity
                                  * p.electrolyte_density));
 
